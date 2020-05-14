@@ -48,7 +48,7 @@ class FeatureEmbedding(nn.Module):
     def forward(self, x):
         output = x.clone()
 
-        # The weights are shared withing the recursive block!
+        # The weights are shared within the recursive block!
         for i in range(self.num_recursion):
             output = self.recursive_block(output) + x
 
