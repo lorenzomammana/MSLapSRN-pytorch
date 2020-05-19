@@ -90,7 +90,6 @@ class LapSrnMS(nn.Module):
             features = self.transpose(self.relu_features(features))
 
             features = features[:, :, :-1, :-1]
-            print(features.shape)
             rescaled_img = self.scale_img(rescaled_img)
             rescaled_img = rescaled_img[:, :, 1:-1, 1:-1]
             predict = self.predict(features)
