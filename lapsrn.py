@@ -23,15 +23,10 @@ class RecursiveBlock(nn.Module):
 
         self.block = nn.Sequential()
         for i in range(d):
-            self.block.add_module("conv_" + str(i), nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3,
-                                                              stride=1, padding=1, bias=True))
             self.block.add_module("relu_" + str(i), nn.LeakyReLU(0.2, inplace=True))
 
-        for m in self.block.modules():
-            if isinstance(m, nn.Conv2d):
-                torch.nn.init.kaiming_uniform_(m.weight, a=0.2, nonlinearity='leaky_relu')
-                if m.bias is not None:
-                    m.bias.data.zero_()
+            self.block.add_module("conv_" + str(i), nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3,
+                                                              stride=1, padding=1, bias=True))
 
     def forward(self, x):
         output = self.block(x)
@@ -61,14 +56,14 @@ class LapSrnMS(nn.Module):
 
         self.scale = scale
         self.conv_input = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1, bias=True)
-        self.relu = nn.LeakyReLU(0.2, inplace=True)
 
-        self.transpose = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=4,
-                                            stride=2, padding=1, bias=True)
+        self.transpose = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3,
+                                            stride=2, padding=0, bias=True)
         self.relu_features = nn.LeakyReLU(0.2, inplace=True)
 
         self.scale_img = nn.ConvTranspose2d(in_channels=1, out_channels=1, kernel_size=4,
-                                            stride=2, padding=1, bias=True)
+                                            stride=2, padding=0, bias=False)
+
         self.predict = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=1, padding=1, bias=True)
         self.features = FeatureEmbedding(r, d)
 
@@ -86,15 +81,18 @@ class LapSrnMS(nn.Module):
                     m.bias.data.zero_()
 
     def forward(self, x):
-        features = self.relu(self.conv_input(x))
+        features = self.conv_input(x)
         output_images = []
         rescaled_img = x.clone()
 
         for i in range(int(math.log2(self.scale))):
             features = self.features(features)
-            features = self.relu_features(self.transpose(features))
+            features = self.transpose(self.relu_features(features))
 
+            features = features[:, :, :-1, :-1]
+            print(features.shape)
             rescaled_img = self.scale_img(rescaled_img)
+            rescaled_img = rescaled_img[:, :, 1:-1, 1:-1]
             predict = self.predict(features)
             out = torch.add(predict, rescaled_img)
 
