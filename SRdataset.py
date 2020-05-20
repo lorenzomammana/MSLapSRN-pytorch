@@ -5,41 +5,26 @@ import torchvision.transforms.functional as tf
 from PIL import Image
 
 
-def transform(img_lr, img_2x, img_4x, settype):
+def transform(img, settype):
     # Resize
     if settype == "train":
         # Random horizontal flipping
         if random.random() > 0.5:
-            img_lr = tf.hflip(img_lr)
-            img_2x = tf.hflip(img_2x)
-            img_4x = tf.hflip(img_4x)
-
-        # Random horizontal flipping
-        if random.random() > 0.5:
-            img_lr = tf.vflip(img_lr)
-            img_2x = tf.vflip(img_2x)
-            img_4x = tf.vflip(img_4x)
+            img = tf.hflip(img)
 
         # Random rotation
         rotations = [0, 90, 180, 270]
         pick_rotation = rotations[random.randint(0, 3)]
-        img_lr = tf.rotate(img_lr, pick_rotation)
-        img_2x = tf.rotate(img_2x, pick_rotation)
-        img_4x = tf.rotate(img_4x, pick_rotation)
-
-        resize_factor = random.uniform(0.5, 1)
-        img_lr = img_lr.resize((int(img_lr.size[0] * resize_factor), int(img_lr.size[1] * resize_factor)), Image.BICUBIC)
-        img_2x = img_2x.resize((int(img_2x.size[0] * resize_factor), int(img_2x.size[1] * resize_factor)), Image.BICUBIC)
-        img_4x = img_4x.resize((int(img_4x.size[0] * resize_factor), int(img_4x.size[1] * resize_factor)), Image.BICUBIC)
+        img = tf.rotate(img, pick_rotation)
 
         # Transform to tensor
-        img_lr = tf.to_tensor(transforms.Resize((32, 32), Image.BICUBIC)(img_lr))
-        img_2x = tf.to_tensor(transforms.Resize((64, 64), Image.BICUBIC)(img_2x))
-        img_4x = tf.to_tensor(transforms.Resize((128, 128), Image.BICUBIC)(img_4x))
+        img_lr = tf.to_tensor(transforms.Resize((32, 32), Image.BICUBIC)(img))
+        img_2x = tf.to_tensor(transforms.Resize((64, 64), Image.BICUBIC)(img))
+        img_4x = tf.to_tensor(img)
     else:
-        img_lr = tf.to_tensor(img_lr)
-        img_2x = tf.to_tensor(img_2x)
-        img_4x = tf.to_tensor(img_4x)
+        img_lr = tf.to_tensor(transforms.Resize((32, 32), Image.BICUBIC)(img))
+        img_2x = tf.to_tensor(transforms.Resize((64, 64), Image.BICUBIC)(img))
+        img_4x = tf.to_tensor(img)
 
     return img_lr, img_2x, img_4x
 
@@ -52,6 +37,8 @@ class SRdataset(Dataset):
         with open(list_ids, 'r') as f:
             self.list_ids = f.read().splitlines()
             self.settype = settype
+            self.patch_size = 128
+            self.eps = 1e-3
 
     def __len__(self):
         """Denotes the total number of samples"""
@@ -63,14 +50,25 @@ class SRdataset(Dataset):
         id = self.list_ids[index]
 
         # Load data and get label
-        img_4x = Image.open('dataset/{}_patches/4x/{}'.format(self.settype, id))
-        img_2x = Image.open('dataset/{}_patches/2x/{}'.format(self.settype, id))
-        img_lr = Image.open('dataset/{}_patches/lr/{}'.format(self.settype, id))
-        img_4x = img_4x.convert('YCbCr')
-        img_2x = img_2x.convert('YCbCr')
-        img_lr = img_lr.convert('YCbCr')
+        img = Image.open('dataset/{}/{}'.format(self.settype, id))
+        img = img.convert('YCbCr')
+        img = img.getchannel(0)
 
-        return transform(img_lr.getchannel(0),
-                         img_2x.getchannel(0),
-                         img_4x.getchannel(0),
-                         self.settype)
+        if self.settype == 'train':
+            resize_factor = random.uniform(0.5, 1)
+
+            if img.size[0] < img.size[1]:
+                if img.size[0] * resize_factor < self.patch_size:
+                    resize_factor = self.patch_size / img.size[0] + self.eps
+            else:
+                if img.size[1] * resize_factor < self.patch_size:
+                    resize_factor = self.patch_size / img.size[1] + self.eps
+
+            img = img.resize((int(img.size[0] * resize_factor), int(img.size[1] * resize_factor)), Image.BICUBIC)
+
+            print(img.size)
+            img = transforms.RandomCrop((self.patch_size, self.patch_size))(img)
+        else:
+            img = img.resize(self.patch_size, self.patch_size, Image.BICUBIC)
+
+        return transform(img, self.settype)
