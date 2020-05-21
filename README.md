@@ -38,16 +38,16 @@ usage: demo.py
 
 ### Citation
 
-If you find the code and datasets useful in your research, please cite:
+If you find the code and datasets useful in your research, please consider citing:
     
-@article{DBLP:journals/corr/abs-1710-01992,
-  author    = {Wei{-}Sheng Lai and
-               Jia{-}Bin Huang and
-               Narendra Ahuja and
-               Ming{-}Hsuan Yang},
-  title     = {Fast and Accurate Image Super-Resolution with Deep Laplacian Pyramid
-               Networks},
-  journal   = {CoRR},
-  volume    = {abs/1710.01992},
-  year      = {2017},
-}
+    @article{DBLP:journals/corr/abs-1710-01992,
+      author    = {Wei{-}Sheng Lai and
+                   Jia{-}Bin Huang and
+                   Narendra Ahuja and
+                   Ming{-}Hsuan Yang},
+      title     = {Fast and Accurate Image Super-Resolution with Deep Laplacian Pyramid
+                   Networks},
+      journal   = {CoRR},
+      volume    = {abs/1710.01992},
+      year      = {2017},
+    }
