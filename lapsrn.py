@@ -55,7 +55,7 @@ class LapSrnMS(nn.Module):
         super(LapSrnMS, self).__init__()
 
         self.scale = scale
-        self.conv_input = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1, bias=True)
+        self.conv_input = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, stride=1, padding=1, bias=True, )
 
         self.transpose = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3,
                                             stride=2, padding=0, bias=True)
@@ -67,15 +67,30 @@ class LapSrnMS(nn.Module):
         self.predict = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=1, padding=1, bias=True)
         self.features = FeatureEmbedding(r, d)
 
+        i_conv = 0
+        i_tconv = 0
+
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                torch.nn.init.kaiming_uniform_(m.weight, a=0.2, nonlinearity='leaky_relu')
+                if i_conv == 0:
+                    m.weight.data = 0.001 * torch.randn(m.weight.shape)
+                else:
+                    m.weight.data = math.sqrt(2 / (3 * 3 * 64)) * torch.randn(m.weight.shape)
+                    # torch.nn.init.kaiming_uniform_(m.weight, a=0.2, nonlinearity='leaky_relu')
+
+                i_conv += 1
+
                 if m.bias is not None:
                     m.bias.data.zero_()
             if isinstance(m, nn.ConvTranspose2d):
-                c1, c2, h, w = m.weight.data.size()
-                weight = get_upsample_filter(h)
-                m.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
+                if i_tconv == 0:
+                    m.weight.data = math.sqrt(2 / (3 * 3 * 64)) * torch.randn(m.weight.shape)
+                else:
+                    c1, c2, h, w = m.weight.data.size()
+                    weight = get_upsample_filter(h)
+                    m.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
+
+                i_tconv += 1
 
                 if m.bias is not None:
                     m.bias.data.zero_()
