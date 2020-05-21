@@ -32,22 +32,21 @@ def exp_lr_scheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=100):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-    return optimizer
+    return optimizer, lr
 
 
 # CUDA for PyTorch
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda:2" if use_cuda else "cpu")
 
-# Parameters
-params = {'batch_size': 64,
-          'shuffle': True,
-          'num_workers': 4}
 max_epochs = 1000
 
 # Generators
-training_set = SRdataset("train_patches.txt")
-training_generator = data.DataLoader(training_set, **params)
+training_set = SRdataset("train")
+training_generator = data.DataLoader(training_set, batch_size=64, shuffle=True, num_workers=4, pin_memory=True)
+
+validation_set = SRdataset("validation")
+validation_generator = data.DataLoader(validation_set, batch_size=64, shuffle=False, num_workers=1, pin_memory=True)
 
 net = LapSrnMS(5, 5, 4)
 
@@ -55,54 +54,78 @@ if use_cuda:
     net.to(device)
 
 criterion = CharbonnierLoss()
-optimizer = optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-4)
+optimizer = optim.Adam(net.parameters(), lr=1e-3, weight_decay=1e-4)
 
 if __name__ == '__main__':
     # Loop over epochs
     loss_min = np.inf
+    running_loss_valid = 0.0
     for epoch in range(max_epochs):  # loop over the dataset multiple times
-        optimizer = exp_lr_scheduler(optimizer, epoch, init_lr=1e-4, lr_decay_epoch=100)
-        running_loss = 0.0
+        optimizer, current_lr = exp_lr_scheduler(optimizer, epoch, init_lr=1e-3, lr_decay_epoch=20)
+        running_loss_train = 0.0
+
+        net.train()
 
         for i, data in enumerate(training_generator, 0):
+
             # get the inputs; data is a list of [inputs, labels]
             in_lr, in_2x, in_4x = data[0].to(device), data[1].to(device), data[2].to(device)
 
-            in_lr.requires_grad = True
+            # in_lr.requires_grad = True
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
             out_2x, out_4x = net(in_lr)
-            loss_2x = criterion(in_2x, out_2x)
-            loss_4x = criterion(in_4x, out_4x)
+            loss_2x = criterion(out_2x, in_2x)
+            loss_4x = criterion(out_4x, in_4x)
 
             loss = (loss_2x + loss_4x) / in_lr.shape[0]
 
-            loss_2x.backward(retain_graph=True)
+            loss.backward()
+            # loss_2x.backward(retain_graph=True)
 
-            loss_4x.backward()
+            # loss_4x.backward()
 
-            # torch.nn.utils.clip_grad_norm_(net.parameters(), 1)
+            # torch.nn.utils.clip_grad_norm_(net.parameters(), 0.01 / current_lr)
 
             optimizer.step()
 
-            if loss.item() < loss_min:
-                checkpoint = {
-                    'epoch': epoch + 1,
-                    'valid_loss_min': loss,
-                    'state_dict': net.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                }
-                save_ckp(checkpoint, True, "ckp.pt", "best.pt")
-                loss_min = loss.item()
-                print("Best model loss: {}".format(loss))
-
             # print statistics
-            running_loss += loss.item()
+            running_loss_train += loss.item()
             if i % 100 == 99:    # print every 5 mini-batches
-                print('[%d, %5d] loss: %.3f' %
-                      (epoch + 1, i + 1, running_loss / 100))
-                running_loss = 0.0
+                print('[%d, %5d] training loss: %.3f' %
+                      (epoch + 1, i + 1, running_loss_train / 100))
+                running_loss_train = 0.0
+
+        net.eval()
+
+        for j, data_valid in enumerate(validation_generator, 0):
+            in_lr, in_2x, in_4x = data_valid[0].to(device), data_valid[1].to(device), data_valid[2].to(device)
+
+            out_2x, out_4x = net(in_lr)
+            loss_2x = criterion(out_2x, in_2x)
+            loss_4x = criterion(out_4x, in_4x)
+
+            loss = (loss_2x + loss_4x) / in_lr.shape[0]
+
+            running_loss_valid += loss.item()
+
+        running_loss_valid = running_loss_valid / len(validation_generator)
+
+        print('[%d] validation loss: %.3f' %
+              (epoch + 1, running_loss_valid))
+
+        if running_loss_valid < loss_min:
+            checkpoint = {
+                'epoch': epoch + 1,
+                'valid_loss_min': running_loss_valid,
+                'state_dict': net.state_dict(),
+                'optimizer': optimizer.state_dict(),
+            }
+            save_ckp(checkpoint, True, "ckp.pt", "best.pt")
+            loss_min = running_loss_valid
+
+        running_loss_valid = 0.0
 
     print('Finished Training')
