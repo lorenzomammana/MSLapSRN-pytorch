@@ -34,14 +34,7 @@ net = LapSrnMS(5, 5, 4)
 net.load_state_dict(checkpoint['state_dict'])
 net.to('cuda:2')
 
-im = get_y(Image.open("dataset/train_patches/lr/12003_0_200.png"))
-im_2x = get_y(Image.open("dataset/train_patches/2x/12003_0_200.png"))
-im_4x = get_y(Image.open("dataset/train_patches/4x/12003_0_200.png"))
-
-
-im.save("in_lr.png", "PNG")
-im_2x.save("in_2x.png", "PNG")
-im_4x.save("in_4x.png", "PNG")
+im_4x = get_y(Image.open("in_4x.png"))
 
 im = tf.to_tensor(im_4x)
 im = im.unsqueeze(0)

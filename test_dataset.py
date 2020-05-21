@@ -1,10 +1,6 @@
 from torch.utils import data
 from SRdataset import SRdataset
-from lapsrn import *
-
-# CUDA for PyTorch
-use_cuda = torch.cuda.is_available()
-device = torch.device("cuda:2" if use_cuda else "cpu")
+from torchvision import transforms
 
 # Parameters
 params = {'batch_size': 1,
@@ -12,5 +8,15 @@ params = {'batch_size': 1,
           'num_workers': 4}
 
 # Generators
-training_set = SRdataset("train_patches.txt")
+training_set = SRdataset("train")
 training_generator = data.DataLoader(training_set, **params)
+
+for i, data in enumerate(training_generator):
+    in_lr, in_2x, in_4x = transforms.ToPILImage()(data[0].squeeze()), transforms.ToPILImage()(data[1].squeeze()), \
+                          transforms.ToPILImage()(data[2].squeeze())
+    in_lr.save('testing/{}_lr.png'.format(i))
+    in_2x.save('testing/{}_2x.png'.format(i))
+    in_4x.save('testing/{}_4x.png'.format(i))
+
+    if i == 5:
+        break
