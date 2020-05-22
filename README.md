@@ -40,6 +40,26 @@ usage: generate_test_mat.m
 ```
 This matlab script will produce one .mat file for all the testing files containg the 2x and 4x images resized following the author previous work.
 
+### Folder structure
+The final folder structure is going to be something like this
+```bash
+├── MSLapSRN-pytorch
+│   ├── dataset
+│   │   ├── mat
+│   │   │   ├── Set5
+│   │   │   │   ├── 2x
+│   │   │   │   ├── 4x
+│   │   │   ├── Another test set following the same schema
+│   │   ├── test
+│   │   │   ├── test set folders containing images
+│   │   ├── train
+│   │   │   ├── 291 image
+│   │   ├── validation
+│   │   │   ├── 100 images
+├── *.py
+├── README.md
+└── .gitignore
+```
 ### Performance
 - Using the parameters contained in the train.py script i was able to achieve these performances using the D5R5 network.
   
@@ -52,6 +72,7 @@ This matlab script will produce one .mat file for all the testing files containg
 | Set14 (4x)    | 28.25      | **28.35** |
 | BSD100 (4x)   | **27.42**      | 27.41 |
 
+I've tested only the D5R5 implementation with 2x, 4x scaling, as the network is dynamically generated it's easy to increase the scale or change the recursion and depth!
 
 ### Citation
 
