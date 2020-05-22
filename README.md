@@ -1,4 +1,5 @@
-# PyTorch LapSRN
+# PyTorch LapSRN implementation with weight sharing and skip connections (MSLapSRN)
+
 Implementation of TPAMI 2018 Paper: "Fast and Accurate Image Super-Resolution with Deep Laplacian Pyramid Networks"(http://vllab.ucmerced.edu/wlai24/LapSRN/) in PyTorch.
 
 Code for the evaluation, implementation of the loss and the bicubic filter weights are taken from https://github.com/twtygqyy/pytorch-LapSRN.
