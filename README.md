@@ -9,7 +9,9 @@ In particular the 2018 implementation uses weight sharing and skip connection to
 
 ## Usage
 ### Training
-
+```
+usage: train.py
+```
 ### Evaluation
 ```
 usage: eval_mat.py
@@ -20,8 +22,23 @@ usage: eval_mat.py
 usage: demo.py
 ```
 
-### Prepare Training dataset
+### Prepare Datasets
   - Download training and testing dataset from https://github.com/phoenix104104/LapSRN/blob/master/datasets/datasets_download_links.txt
+  - Create directory dataset
+  - Create subdirectories train, test, validation
+  - Place the BSDS200 + T91 images inside the train folder
+  - Place the General100 images inside the validation folder
+  - Place the Set5, Set14, BSDS100 folders inside the test folder
+ 
+### Prepare evaluation
+  - Create a folder named mat inside dataset
+  - For each test set create a subfolder
+  - Inside each subfolder create a 2x folder and a 4x folder
+  - Launch the matlab script
+```
+usage: generate_test_mat.m
+```
+This matlab script will produce one .mat file for all the testing files containg the 2x and 4x images resized following the author previous work.
 
 ### Performance
 - Using the parameters contained in the train.py script i was able to achieve these performances using the D5R5 network.
