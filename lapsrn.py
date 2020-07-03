@@ -110,6 +110,8 @@ class LapSrnMS(nn.Module):
             predict = self.predict(features)
             out = torch.add(predict, rescaled_img)
 
+            out = torch.clamp(out, 0.0, 1.0)
+
             output_images.append(out)
 
         return output_images

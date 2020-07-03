@@ -1,5 +1,5 @@
 from lapsrn import *
-from PIL import Image
+from PIL import Image, ImageFilter
 import torchvision.transforms.functional as tf
 from torchvision import transforms
 
@@ -23,7 +23,7 @@ def load_ckp(checkpoint_fpath, model, optimizer):
 
 
 def get_y(img):
-    img = img.convert("YCbCr")
+    img = img.convert('YCbCr')
     img = img.getchannel(0)
 
     return img
@@ -34,7 +34,7 @@ net = LapSrnMS(5, 5, 4)
 net.load_state_dict(checkpoint['state_dict'])
 net.to('cuda:2')
 
-im_4x = get_y(Image.open("in_4x.png"))
+im_4x = get_y(Image.open("../ir-lapsrn/dataset/FLIR/test/registered-rgb/FLIR_video_03273.jpeg"))
 
 im = tf.to_tensor(im_4x)
 im = im.unsqueeze(0)

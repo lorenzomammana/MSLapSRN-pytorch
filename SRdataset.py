@@ -13,6 +13,9 @@ def transform(img, settype):
         if random.random() > 0.5:
             img = tf.hflip(img)
 
+        if random.random() > 0.5:
+            img = tf.vflip(img)
+
         # Random rotation
         rotations = [0, 90, 180, 270]
         pick_rotation = rotations[random.randint(0, 3)]
@@ -36,6 +39,7 @@ class SRdataset(Dataset):
     def __init__(self, settype):
         """Initialization"""
         self.list_ids = glob.glob('dataset/{}/*.png'.format(settype))
+        self.true_len = len(self.list_ids)
         self.settype = settype
         self.patch_size = 128
         self.eps = 1e-3
@@ -51,7 +55,7 @@ class SRdataset(Dataset):
         """Generates one sample of data"""
         # Select sample
         if self.settype == 'train':
-            id = self.list_ids[int(290 * index / self.__len__())]
+            id = self.list_ids[int(self.true_len * index / self.__len__())]
         else:
             id = self.list_ids[index]
 

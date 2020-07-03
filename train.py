@@ -61,7 +61,7 @@ if __name__ == '__main__':
     loss_min = np.inf
     running_loss_valid = 0.0
     for epoch in range(max_epochs):  # loop over the dataset multiple times
-        optimizer, current_lr = exp_lr_scheduler(optimizer, epoch, init_lr=1e-3, lr_decay_epoch=20)
+        optimizer, current_lr = exp_lr_scheduler(optimizer, epoch, init_lr=1e-3, lr_decay_epoch=10)
         running_loss_train = 0.0
 
         net.train()
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
             # loss_4x.backward()
 
-            # torch.nn.utils.clip_grad_norm_(net.parameters(), 0.01 / current_lr)
+            torch.nn.utils.clip_grad_norm_(net.parameters(), 0.01 / current_lr)
 
             optimizer.step()
 
