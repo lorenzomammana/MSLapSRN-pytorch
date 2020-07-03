@@ -66,12 +66,12 @@ The final folder structure is going to be something like this
   
 | DataSet/Method        | LapSRN Paper (PSNR)          | LapSRN PyTorch (PSNR) | LapSRN Paper (SSIM) | LapSRN PyTorch (SSIM) | 
 | ------------- |:-------------:| :-------------: |:-------------:| :-------------:|
-| Set5 (2x)     | **37.72**      | 37.46 | **0.960**      | 0.958 | 
-| Set14 (2x)    | **33.24**      | 33.07 | **0.914**      | 0.911 | 
-| BSD100 (2x)   | **32.00**      | 31.79 | **0.898**      | 0.892 | 
-| Set5 (4x)     | 31.74      | **31.77** | 0.888      | **0.890** | 
-| Set14 (4x)    | 28.25      | **28.35** | 0.773    | **0.774** | 
-| BSD100 (4x)   | **27.42**      | 27.41 | **0.731** | 0.729 | 
+| Set5 (2x)     | **37.72**      | 37.49 | **0.960**      | 0.958 | 
+| Set14 (2x)    | **33.24**      | 33.11 | **0.914**      | 0.912 | 
+| BSD100 (2x)   | **32.00**      | 31.83 | **0.898**      | 0.893 | 
+| Set5 (4x)     | 31.74      | **31.83** | 0.888      | **0.890** | 
+| Set14 (4x)    | 28.25      | **28.39** | 0.773    | **0.775** | 
+| BSD100 (4x)   | **27.42**      | **27.42** | **0.731** | 0.729 | 
 
 I've tested only the D5R5 implementation with 2x, 4x scaling, as the network is dynamically generated it's easy to increase the scale or change the recursion and depth!
 
