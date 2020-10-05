@@ -29,16 +29,16 @@ def get_y(img):
     return img
 
 
-checkpoint = torch.load('best.pt')
+checkpoint = torch.load('best.pt', map_location='cuda:0')
 net = LapSrnMS(5, 5, 4)
 net.load_state_dict(checkpoint['state_dict'])
-net.to('cuda:2')
+net.to('cuda:0')
 
-im_4x = get_y(Image.open("../ir-lapsrn/dataset/FLIR/test/registered-rgb/FLIR_video_03273.jpeg"))
+im_4x = get_y(Image.open("pr-curve.jpeg"))
 
 im = tf.to_tensor(im_4x)
 im = im.unsqueeze(0)
-im = im.to('cuda:2')
+im = im.to('cuda:0')
 
 with torch.no_grad():
     out_2x, out_4x = net(im)
