@@ -2,3 +2,4 @@ dataset/
 .idea/
 __pycache__/
 Set5/
+*.pt

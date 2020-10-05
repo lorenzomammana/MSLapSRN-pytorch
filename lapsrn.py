@@ -112,6 +112,8 @@ class LapSrnMS(nn.Module):
 
             out = torch.clamp(out, 0.0, 1.0)
 
+            rescaled_img = out
+
             output_images.append(out)
 
         return output_images

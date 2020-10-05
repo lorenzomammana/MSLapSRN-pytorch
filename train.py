@@ -37,9 +37,9 @@ def exp_lr_scheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=100):
 
 # CUDA for PyTorch
 use_cuda = torch.cuda.is_available()
-device = torch.device("cuda:2" if use_cuda else "cpu")
+device = torch.device("cuda:0" if use_cuda else "cpu")
 
-max_epochs = 1000
+max_epochs = 100
 
 # Generators
 training_set = SRdataset("train")
@@ -48,7 +48,7 @@ training_generator = data.DataLoader(training_set, batch_size=64, shuffle=True, 
 validation_set = SRdataset("validation")
 validation_generator = data.DataLoader(validation_set, batch_size=64, shuffle=False, num_workers=1, pin_memory=True)
 
-net = LapSrnMS(5, 5, 4)
+net = LapSrnMS(5, 5, 8)
 
 if use_cuda:
     net.to(device)
@@ -69,18 +69,19 @@ if __name__ == '__main__':
         for i, data in enumerate(training_generator, 0):
 
             # get the inputs; data is a list of [inputs, labels]
-            in_lr, in_2x, in_4x = data[0].to(device), data[1].to(device), data[2].to(device)
+            in_lr, in_2x, in_4x, in_8x = data[0].to(device), data[1].to(device), data[2].to(device), data[3].to(device)
 
             # in_lr.requires_grad = True
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            out_2x, out_4x = net(in_lr)
+            out_2x, out_4x, out_8x = net(in_lr)
             loss_2x = criterion(out_2x, in_2x)
             loss_4x = criterion(out_4x, in_4x)
+            loss_8x = criterion(out_8x, in_8x)
 
-            loss = (loss_2x + loss_4x) / in_lr.shape[0]
+            loss = (loss_2x + loss_4x + loss_8x) / in_lr.shape[0]
 
             loss.backward()
             # loss_2x.backward(retain_graph=True)
@@ -101,13 +102,15 @@ if __name__ == '__main__':
         net.eval()
 
         for j, data_valid in enumerate(validation_generator, 0):
-            in_lr, in_2x, in_4x = data_valid[0].to(device), data_valid[1].to(device), data_valid[2].to(device)
+            in_lr, in_2x, in_4x, in_8x = data_valid[0].to(device), data_valid[1].to(device), data_valid[2].to(device),\
+                                         data_valid[3].to(device)
 
-            out_2x, out_4x = net(in_lr)
+            out_2x, out_4x, out_8x = net(in_lr)
             loss_2x = criterion(out_2x, in_2x)
             loss_4x = criterion(out_4x, in_4x)
+            loss_8x = criterion(out_8x, in_8x)
 
-            loss = (loss_2x + loss_4x) / in_lr.shape[0]
+            loss = (loss_2x + loss_4x + loss_8x) / in_lr.shape[0]
 
             running_loss_valid += loss.item()
 

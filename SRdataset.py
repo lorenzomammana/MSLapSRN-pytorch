@@ -4,9 +4,10 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 import torchvision.transforms.functional as tf
 from PIL import Image
+import torch
 
 
-def transform(img, settype):
+def transform(img, settype, patch_size):
     # Resize
     if settype == "train":
         # Random horizontal flipping
@@ -22,15 +23,23 @@ def transform(img, settype):
         img = tf.rotate(img, pick_rotation)
 
         # Transform to tensor
-        img_lr = tf.to_tensor(transforms.Resize((32, 32), Image.BICUBIC)(img))
-        img_2x = tf.to_tensor(transforms.Resize((64, 64), Image.BICUBIC)(img))
-        img_4x = tf.to_tensor(img)
-    else:
-        img_lr = tf.to_tensor(transforms.Resize((32, 32), Image.BICUBIC)(img))
-        img_2x = tf.to_tensor(transforms.Resize((64, 64), Image.BICUBIC)(img))
-        img_4x = tf.to_tensor(img)
+        img_lr = tf.to_tensor(transforms.Resize((patch_size // 8, patch_size // 8), Image.BICUBIC)(img))
 
-    return img_lr, img_2x, img_4x
+        if random.random() > 0.5:
+            gauss = torch.normal(0, 0.01, img_lr.size())
+            img_lr = img_lr + gauss
+            img_lr = torch.clamp(img_lr, 0, 1)
+
+        img_2x = tf.to_tensor(transforms.Resize((patch_size // 4, patch_size // 4), Image.BICUBIC)(img))
+        img_4x = tf.to_tensor(transforms.Resize((patch_size // 2, patch_size // 2), Image.BICUBIC)(img))
+        img_8x = tf.to_tensor(img)
+    else:
+        img_lr = tf.to_tensor(transforms.Resize((patch_size // 8, patch_size // 8), Image.BICUBIC)(img))
+        img_2x = tf.to_tensor(transforms.Resize((patch_size // 4, patch_size // 4), Image.BICUBIC)(img))
+        img_4x = tf.to_tensor(transforms.Resize((patch_size // 2, patch_size // 2), Image.BICUBIC)(img))
+        img_8x = tf.to_tensor(img)
+
+    return img_lr, img_2x, img_4x, img_8x
 
 
 class SRdataset(Dataset):
@@ -79,4 +88,4 @@ class SRdataset(Dataset):
         else:
             img = img.resize((self.patch_size, self.patch_size), Image.BICUBIC)
 
-        return transform(img, self.settype)
+        return transform(img, self.settype, self.patch_size)
